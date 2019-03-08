@@ -5,8 +5,17 @@ import os
 
 
 class DatasetCatalog(object):
-    DATA_DIR = "datasets"
+    DATA_DIR = "/home/iim321/liu/maskrcnn-benchmark/datasets"
     DATASETS = {
+        "coco_daofeishi_trainval": {
+            "img_dir": "data_daofeishi/coco/trainval",
+            "ann_file": "data_daofeishi/coco/annotations/trainval.json"
+        },
+        "coco_daofeishi_test": {
+            "img_dir": "data_daofeishi/coco/val",
+            "ann_file": "data_daofeishi/coco/annotations/test.json"
+        },
+
         "coco_2017_train": {
             "img_dir": "coco/train2017",
             "ann_file": "coco/annotations/instances_train2017.json"

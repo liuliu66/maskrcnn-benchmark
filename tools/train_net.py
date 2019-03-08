@@ -3,6 +3,7 @@ r"""
 Basic training script for PyTorch
 """
 
+import cv2
 # Set up custom environment before nearly anything else is imported
 # NOTE: this should be the first import (no not reorder)
 from maskrcnn_benchmark.utils.env import setup_environment  # noqa F401 isort:skip
@@ -25,9 +26,12 @@ from maskrcnn_benchmark.utils.imports import import_file
 from maskrcnn_benchmark.utils.logger import setup_logger
 from maskrcnn_benchmark.utils.miscellaneous import mkdir
 
+torch.multiprocessing.set_sharing_strategy('file_system')
+
 
 def train(cfg, local_rank, distributed):
     model = build_detection_model(cfg)
+    print(model)
     device = torch.device(cfg.MODEL.DEVICE)
     model.to(device)
 

@@ -46,6 +46,28 @@ class ResNet50Conv5ROIFeatureExtractor(nn.Module):
         return x
 
 
+@registry.ROI_BOX_FEATURE_EXTRACTORS.register("FastRCNNROIFeatureExtractor")
+class FastRCNNROIFeatureExtractor(nn.Module):
+    def __init__(self, config, in_channels):
+        super(FastRCNNROIFeatureExtractor, self).__init__()
+
+        resolution = config.MODEL.ROI_BOX_HEAD.POOLER_RESOLUTION
+        scales = config.MODEL.ROI_BOX_HEAD.POOLER_SCALES
+        sampling_ratio = config.MODEL.ROI_BOX_HEAD.POOLER_SAMPLING_RATIO
+        pooler = Pooler(
+            output_size=(resolution, resolution),
+            scales=scales,
+            sampling_ratio=sampling_ratio,
+        )
+
+        self.pooler = pooler
+        self.out_channels = in_channels
+
+    def forward(self, x, proposals):
+        x = self.pooler(x, proposals)
+        return x
+
+
 @registry.ROI_BOX_FEATURE_EXTRACTORS.register("FPN2MLPFeatureExtractor")
 class FPN2MLPFeatureExtractor(nn.Module):
     """

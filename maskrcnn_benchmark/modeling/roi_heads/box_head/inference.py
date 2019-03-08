@@ -77,6 +77,7 @@ class PostProcessor(nn.Module):
         for prob, boxes_per_img, image_shape in zip(
             class_prob, proposals, image_shapes
         ):
+            # prob: [450, 2], boxes_per_img: [450, 8], image_shape: (1500, 1125)
             boxlist = self.prepare_boxlist(boxes_per_img, prob, image_shape)
             boxlist = boxlist.clip_to_image(remove_empty=False)
             boxlist = self.filter_results(boxlist, num_classes)
@@ -96,6 +97,7 @@ class PostProcessor(nn.Module):
         dataset (including the background class). `scores[i, j]`` corresponds to the
         box at `boxes[i, j * 4:(j + 1) * 4]`.
         """
+        # boxes: [900, 4] scores: [900]
         boxes = boxes.reshape(-1, 4)
         scores = scores.reshape(-1)
         boxlist = BoxList(boxes, image_shape, mode="xyxy")

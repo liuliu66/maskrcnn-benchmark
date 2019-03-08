@@ -16,13 +16,26 @@ def build_transforms(cfg, is_train=True):
     normalize_transform = T.Normalize(
         mean=cfg.INPUT.PIXEL_MEAN, std=cfg.INPUT.PIXEL_STD, to_bgr255=to_bgr255
     )
-
-    transform = T.Compose(
-        [
-            T.Resize(min_size, max_size),
-            T.RandomHorizontalFlip(flip_prob),
-            T.ToTensor(),
-            normalize_transform,
-        ]
-    )
+    if cfg.MODEL.META_ARCHITECTURE == 'SSD':
+        min_size = max_size = cfg.MODEL.SSD.INPUT_SIZE
+        transform = T.Compose(
+            [
+                #T.PhotometricDistort(),
+                #T.Expand(cfg.INPUT.PIXEL_MEAN),
+                T.RandomHorizontalFlip(flip_prob),
+                T.ToPercentCoords(),
+                T.StretchResize(min_size,max_size),
+                T.ToTensor(),
+                normalize_transform
+            ]
+        )
+    else:
+        transform = T.Compose(
+            [
+                T.Resize(min_size, max_size),
+                T.RandomHorizontalFlip(flip_prob),
+                T.ToTensor(),
+                normalize_transform,
+            ]
+        )
     return transform

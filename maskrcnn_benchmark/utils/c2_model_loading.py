@@ -130,6 +130,25 @@ def _rename_weights_for_resnet(weights, stage_names):
     return new_weights
 
 
+def _rename_weights_for_vgg(weights):
+    original_keys = sorted(weights.keys())
+    layer_keys = sorted(weights.keys())
+    layer_keys = _rename_basic_resnet_weights(layer_keys)
+    key_map = {k: v for k, v in zip(original_keys, layer_keys)}
+    logger = logging.getLogger(__name__)
+    logger.info("Remapping C2 weights")
+    max_c2_key_size = max([len(k) for k in original_keys if "_momentum" not in k])
+
+    new_weights = OrderedDict()
+    for k in original_keys:
+        v = weights[k]
+        w = torch.from_numpy(v)
+        logger.info("C2 name: {: <{}} mapped name: {}".format(k, max_c2_key_size, key_map[k]))
+        new_weights[key_map[k]] = w
+
+    return new_weights
+
+
 def _load_c2_pickled_weights(file_path):
     with open(file_path, "rb") as f:
         if torch._six.PY3:
@@ -168,6 +187,18 @@ def load_resnet_c2_format(cfg, f):
     arch = arch.replace("-RETINANET", "")
     stages = _C2_STAGE_NAMES[arch]
     state_dict = _rename_weights_for_resnet(state_dict, stages)
+    return dict(model=state_dict)
+
+
+@C2_FORMAT_LOADER.register("VGG16")
+@C2_FORMAT_LOADER.register("VGG16-SSD")
+@C2_FORMAT_LOADER.register("VGG19")
+@C2_FORMAT_LOADER.register("VGG16-FPN")
+@C2_FORMAT_LOADER.register("VGG19-FPN")
+def load_vgg_c2_format(cfg, f):
+    state_dict = _load_c2_pickled_weights(f)
+    conv_body = cfg.MODEL.BACKBONE.CONV_BODY
+    state_dict = _rename_weights_for_vgg(state_dict)
     return dict(model=state_dict)
 
 

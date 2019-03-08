@@ -13,6 +13,10 @@ class FastRCNNPredictor(nn.Module):
 
         num_classes = config.MODEL.ROI_BOX_HEAD.NUM_CLASSES
         self.avgpool = nn.AdaptiveAvgPool2d(1)
+        if 'VGG' in config.MODEL.BACKBONE.CONV_BODY:
+            roi_pooler_factor = (config.MODEL.ROI_BOX_HEAD.POOLER_RESOLUTION / 7) ** 2
+            num_inputs = int(in_channels * roi_pooler_factor)
+            self.avgpool = nn.AvgPool2d(kernel_size=7, stride=7)
         self.cls_score = nn.Linear(num_inputs, num_classes)
         num_bbox_reg_classes = 2 if config.MODEL.CLS_AGNOSTIC_BBOX_REG else num_classes
         self.bbox_pred = nn.Linear(num_inputs, num_bbox_reg_classes * 4)

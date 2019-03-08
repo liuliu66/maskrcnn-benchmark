@@ -1,8 +1,9 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 from .generalized_rcnn import GeneralizedRCNN
+from .ssd import SSD
 
 
-_DETECTION_META_ARCHITECTURES = {"GeneralizedRCNN": GeneralizedRCNN}
+_DETECTION_META_ARCHITECTURES = {"GeneralizedRCNN": GeneralizedRCNN, "SSD": SSD}
 
 
 def build_detection_model(cfg):

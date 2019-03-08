@@ -1,0 +1,37 @@
+MODEL:
+  META_ARCHITECTURE: "SSD"
+  WEIGHT: "/home/iim321/.torch/models/vgg16ssd_torch.pkl"
+  BACKBONE:
+    CONV_BODY: "VGG16-SSD"
+  SSD:
+    INPUT_SIZE: 300
+    BOX_HEAD:
+      PREDICTOR: "SSDHead"
+      NUM_CLASSES: 2
+      THRESH_TRAIN: 0.5
+      THRESH_TEST: 0.01
+      NMS: 0.5
+      NEGPOS_RATIO: 3
+      TOP_K: 200
+    ANCHOR:
+      FEATURE_MAPS_SIZE: [38, 19, 10, 5, 3, 1]
+      SPATIAL_SCALES: [8, 16, 32, 64, 100, 300]
+      MIN_SIZES: [21, 45, 99, 153, 207, 261]
+      MAX_SIZES: [45, 99, 153, 207, 261, 315]
+      ASPECT_RATIOS: [[2], [2, 3], [2, 3], [2, 3], [2], [2]]
+      IN_CHANNELS_LIST: [512, 1024, 512, 256, 256, 256]
+      VARIANCE: [0.1, 0.2]
+DATASETS:
+  TRAIN: ("coco_daofeishi_trainval", )
+  TEST: ("coco_daofeishi_test",)
+SOLVER:
+  BASE_LR: 0.001
+  WEIGHT_DECAY: 0.0001
+  STEPS: (4000, 8000)
+  MAX_ITER: 10000
+  IMS_PER_BATCH: 32
+  CHECKPOINT_PERIOD: 30000
+TEST:
+  IMS_PER_BATCH: 8
+OUTPUT_DIR:
+  /home/iim321/liu/maskrcnn-benchmark/experiments/output/ssd300/vgg16

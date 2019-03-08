@@ -372,6 +372,32 @@ _C.MODEL.FBNET.MASK_HEAD_STRIDE = 0
 _C.MODEL.FBNET.RPN_HEAD_BLOCKS = 0
 _C.MODEL.FBNET.RPN_BN_TYPE = ""
 
+# ---------------------------------------------------------------------------- #
+# FBNet options
+# ---------------------------------------------------------------------------- #
+_C.MODEL.SSD = CN()
+_C.MODEL.SSD.INPUT_SIZE = 300
+
+# box head
+_C.MODEL.SSD.BOX_HEAD = CN()
+_C.MODEL.SSD.BOX_HEAD.PREDICTOR = 'SSDHead'
+_C.MODEL.SSD.BOX_HEAD.NUM_CLASSES = 81
+_C.MODEL.SSD.BOX_HEAD.THRESH_TRAIN = 0.5
+_C.MODEL.SSD.BOX_HEAD.THRESH_TEST = 0.01
+_C.MODEL.SSD.BOX_HEAD.NEGPOS_RATIO = 3
+_C.MODEL.SSD.BOX_HEAD.NMS = 0.5
+_C.MODEL.SSD.BOX_HEAD.TOP_K = 200
+
+# parameters for SSD anchor boxes
+_C.MODEL.SSD.ANCHOR = CN()
+_C.MODEL.SSD.ANCHOR.FEATURE_MAPS_SIZE = [38, 19, 10, 5, 3, 1]
+_C.MODEL.SSD.ANCHOR.SPATIAL_SCALES = [8, 16, 32, 64, 100, 300]
+_C.MODEL.SSD.ANCHOR.MIN_SIZES = [21, 45, 99, 153, 207, 261]
+_C.MODEL.SSD.ANCHOR.MAX_SIZES = [45, 99, 153, 207, 261, 315]
+_C.MODEL.SSD.ANCHOR.ASPECT_RATIOS = [[2], [2, 3], [2, 3], [2, 3], [2], [2]]
+_C.MODEL.SSD.ANCHOR.IN_CHANNELS_LIST = [512, 1024, 512, 256, 256, 256]
+_C.MODEL.SSD.ANCHOR.VARIANCE = [0.1, 0.2]
+
 
 # ---------------------------------------------------------------------------- #
 # Solver

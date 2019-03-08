@@ -1,0 +1,35 @@
+MODEL:
+  META_ARCHITECTURE: "GeneralizedRCNN"
+  WEIGHT: "catalog://ImageNetPretrained/MSRA/R-50"
+  BACKBONE:
+    CONV_BODY: "R-50-C4"
+  RPN:
+    PRE_NMS_TOP_N_TEST: 6000
+    POST_NMS_TOP_N_TEST: 1000
+    ANCHOR_SIZES: (32, 64, 128, 256, 512)
+  ROI_BOX_HEAD:
+    POOLER_RESOLUTION: 14
+    POOLER_SCALES: (0.0625,)
+    POOLER_SAMPLING_RATIO: 0
+    FEATURE_EXTRACTOR: "ResNet50Conv5ROIFeatureExtractor"
+    PREDICTOR: "FastRCNNPredictor"
+    NUM_CLASSES: 2
+DATASETS:
+  TRAIN: ("coco_daofeishi_trainval", )
+  TEST: ("coco_daofeishi_test",)
+SOLVER:
+  BASE_LR: 0.001
+  WEIGHT_DECAY: 0.0001
+  STEPS: (4000, 8000)
+  MAX_ITER: 10000
+  IMS_PER_BATCH: 2
+  CHECKPOINT_PERIOD: 30000
+TEST:
+  IMS_PER_BATCH: 2
+INPUT:
+  MIN_SIZE_TRAIN: (600, )
+  MAX_SIZE_TRAIN: 800
+  MIN_SIZE_TEST: 600
+  MAX_SIZE_TEST: 800
+OUTPUT_DIR:
+  experiments/output/faster_rcnn/resnet-50
