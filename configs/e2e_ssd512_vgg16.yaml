@@ -1,0 +1,29 @@
+MODEL:
+  META_ARCHITECTURE: "SSD"
+  WEIGHT: "/home/iim321/.torch/models/vgg16ssd_torch.pkl"
+  BACKBONE:
+    CONV_BODY: "VGG16-SSD"
+  SSD:
+    INPUT_SIZE: 512
+    BOX_HEAD:
+      PREDICTOR: "SSDHead"
+      NUM_CLASSES: 81
+    ANCHOR:
+      FEATURE_MAPS_SIZE: [64, 32, 16, 8, 4, 2, 1]
+      SPATIAL_SCALES: [8, 16, 32, 64, 128, 256, 512]
+      MIN_SIZES: [20, 51, 133, 215, 296, 378, 460]
+      MAX_SIZES: [51, 133, 215, 296, 378, 460, 542]
+      ASPECT_RATIOS: [[2], [2, 3], [2, 3], [2, 3], [2, 3], [2], [2]]
+      IN_CHANNELS_LIST: [512, 1024, 512, 256, 256, 256, 256]
+DATASETS:
+  TRAIN: ("coco_2014_train", "coco_2014_valminusminival")
+  TEST: ("coco_2014_minival",)
+SOLVER:
+  BASE_LR: 0.001
+  WEIGHT_DECAY: 0.0001
+  STEPS: (120000, 160000)
+  MAX_ITER: 180000
+  IMS_PER_BATCH: 8
+  CHECKPOINT_PERIOD: 30000
+TEST:
+  IMS_PER_BATCH: 8
