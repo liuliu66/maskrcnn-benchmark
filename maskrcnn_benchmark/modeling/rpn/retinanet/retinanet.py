@@ -85,6 +85,76 @@ class RetinaNetHead(torch.nn.Module):
         return logits, bbox_reg
 
 
+class RetinaNetAFHead(torch.nn.Module):
+    """
+    Adds a RetinNet head with classification and regression heads
+    """
+
+    def __init__(self, cfg, in_channels):
+        """
+        Arguments:
+            in_channels (int): number of channels of the input feature
+        """
+        super(RetinaNetAFHead, self).__init__()
+        num_classes = cfg.MODEL.RETINANET.NUM_CLASSES - 1
+
+        cls_tower = []
+        bbox_tower = []
+        for i in range(cfg.MODEL.RETINANET.NUM_CONVS):
+            cls_tower.append(
+                nn.Conv2d(
+                    in_channels,
+                    in_channels,
+                    kernel_size=3,
+                    stride=1,
+                    padding=1
+                )
+            )
+            cls_tower.append(nn.ReLU())
+            bbox_tower.append(
+                nn.Conv2d(
+                    in_channels,
+                    in_channels,
+                    kernel_size=3,
+                    stride=1,
+                    padding=1
+                )
+            )
+            bbox_tower.append(nn.ReLU())
+
+        self.add_module('cls_tower', nn.Sequential(*cls_tower))
+        self.add_module('bbox_tower', nn.Sequential(*bbox_tower))
+        self.cls_logits = nn.Conv2d(
+            in_channels, num_classes, kernel_size=3, stride=1,
+            padding=1
+        )
+        self.bbox_pred = nn.Conv2d(
+            in_channels,  4, kernel_size=3, stride=1,
+            padding=1
+        )
+
+        # Initialization
+        for modules in [self.cls_tower, self.bbox_tower, self.cls_logits,
+                  self.bbox_pred]:
+            for l in modules.modules():
+                if isinstance(l, nn.Conv2d):
+                    torch.nn.init.normal_(l.weight, std=0.01)
+                    torch.nn.init.constant_(l.bias, 0)
+
+
+        # retinanet_bias_init
+        prior_prob = cfg.MODEL.RETINANET.PRIOR_PROB
+        bias_value = -math.log((1 - prior_prob) / prior_prob)
+        torch.nn.init.constant_(self.cls_logits.bias, bias_value)
+
+
+    def forward(self, x):
+        logits = []
+        bbox_reg = []
+        for feature in x:
+            logits.append(self.cls_logits(self.cls_tower(feature)))
+            bbox_reg.append(self.bbox_pred(self.bbox_tower(feature)))
+
 class RetinaNetModule(torch.nn.Module):
     """
     Module for RetinaNet computation. Takes feature maps from the backbone and
@@ -99,6 +169,9 @@ class RetinaNetModule(torch.nn.Module):
         anchor_generator = make_anchor_generator_retinanet(cfg)
         head = RetinaNetHead(cfg, in_channels)
         box_coder = BoxCoder(weights=(10., 10., 5., 5.))
+
+        if cfg.MODEL.RETINANET.ANCHOR_FREE_BRANCH:
+            self.af_head = RetinaNetAFHead(cfg, in_channels)
 
         box_selector_test = make_retinanet_postprocessor(cfg, box_coder, is_train=False)
 
@@ -134,13 +207,10 @@ class RetinaNetModule(torch.nn.Module):
 
     def _forward_train(self, anchors, box_cls, box_regression, targets):
 
-        loss_box_cls, loss_box_reg = self.loss_evaluator(
+        losses = self.loss_evaluator(
             anchors, box_cls, box_regression, targets
         )
-        losses = {
-            "loss_retina_cls": loss_box_cls,
-            "loss_retina_reg": loss_box_reg,
-        }
+
         return anchors, losses
 
     def _forward_test(self, anchors, box_cls, box_regression):

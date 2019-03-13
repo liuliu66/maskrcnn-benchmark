@@ -335,6 +335,9 @@ _C.MODEL.RETINANET.INFERENCE_TH = 0.05
 # NMS threshold used in RetinaNet
 _C.MODEL.RETINANET.NMS_TH = 0.4
 
+# Feature Selective Anchor Free (FSAF) branch
+_C.MODEL.RETINANET.ANCHOR_FREE_BRANCH = False
+
 
 # ---------------------------------------------------------------------------- #
 # FBNet options

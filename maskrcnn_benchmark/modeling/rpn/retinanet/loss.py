@@ -21,7 +21,7 @@ class RetinaNetLossComputation(RPNLossComputation):
     This class computes the RetinaNet loss.
     """
 
-    def __init__(self, proposal_matcher, box_coder,
+    def __init__(self, cfg, proposal_matcher, box_coder,
                  generate_labels_func,
                  sigmoid_focal_loss,
                  bbox_reg_beta=0.11,
@@ -39,6 +39,7 @@ class RetinaNetLossComputation(RPNLossComputation):
         self.generate_labels_func = generate_labels_func
         self.discard_cases = ['between_thresholds']
         self.regress_norm = regress_norm
+        self.cfg = cfg.clone()
 
     def __call__(self, anchors, box_cls, box_regression, targets):
         """
@@ -63,7 +64,7 @@ class RetinaNetLossComputation(RPNLossComputation):
         regression_targets = torch.cat(regression_targets, dim=0)
         pos_inds = torch.nonzero(labels > 0).squeeze(1)
 
-        retinanet_regression_loss = smooth_l1_loss(
+        retinanet_reg_loss = smooth_l1_loss(
             box_regression[pos_inds],
             regression_targets[pos_inds],
             beta=self.bbox_reg_beta,
@@ -77,7 +78,49 @@ class RetinaNetLossComputation(RPNLossComputation):
             labels
         ) / (pos_inds.numel() + N)
 
-        return retinanet_cls_loss, retinanet_regression_loss
+        if self.cfg.MODEL.RETINANET.ANCHOR_FREE_BRANCH:
+            labels_af, regression_targets_af = self.prepare_anchor_free_targets(targets)
+            N_af = len(labels)
+            labels_af = torch.cat(labels_af, dim=0)
+            regression_targets_af = torch.cat(regression_targets_af, dim=0)
+            pos_inds = torch.nonzero(labels > 0).squeeze(1)
+
+            retinanet_cls_af_loss = self.box_cls_loss_func(
+                box_cls,
+                labels_af
+            ) / (pos_inds.numel() + N)
+
+            retinanet_reg_af_loss = smooth_l1_loss(
+                box_regression[pos_inds],
+                regression_targets_af[pos_inds],
+                beta=self.bbox_reg_beta,
+                size_average=False,
+            ) / (max(1, pos_inds.numel() * self.regress_norm))
+
+            losses = {
+                "loss_retina_cls": retinanet_cls_loss,
+                "loss_retina_reg": retinanet_reg_loss,
+                "loss_retina_cls_af": retinanet_cls_af_loss,
+                "loss_retina_reg_af": retinanet_reg_af_loss,
+            }
+            return losses
+
+        losses = {
+            "loss_retina_cls": retinanet_cls_loss,
+            "loss_retina_reg": retinanet_reg_loss,
+        }
+        return losses
+
+    def prepare_anchor_free_targets(self, targets):
+        """
+
+        :param targets: ground truth
+        :return: labels and regression_targets for anchor free
+        """
+        labels = []
+        regression_targets = []
+
+
 
 
 def generate_retinanet_labels(matched_targets):
@@ -97,6 +140,7 @@ def make_retinanet_loss_evaluator(cfg, box_coder):
     )
 
     loss_evaluator = RetinaNetLossComputation(
+        cfg,
         matcher,
         box_coder,
         generate_retinanet_labels,
